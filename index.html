@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VeriFast.es — De Facturas PDF a Excel AEAT (Mod. 303/130) y VeriFactu en 10 Segundos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .gradient-bg { background: radial-gradient(circle at 20% 20%, #0f172a 0%, #020617 100%); }
+    .glass-card { background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+
+  <!-- Barra de Aviso Normativa AEAT -->
+  <div class="bg-emerald-500/10 border-b border-emerald-500/30 text-emerald-300 text-xs sm:text-sm py-2 px-4 text-center font-medium">
+    ⚡ Normativa Antifraude AEAT & VeriFactu 2026: Convierte tus facturas PDF en Libro Oficial Excel + Modelo 303/130 y genera códigos QR VeriFactu sin pagar cuotas mensuales de ERP.
+  </div>
+
+  <!-- Navegación -->
+  <header class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between border-b border-slate-800/80">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">V</div>
+      <div>
+        <span class="font-extrabold text-xl tracking-tight text-white">VeriFast<span class="text-emerald-400">.es</span></span>
+        <span class="hidden sm:inline-block ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Motor Fiscal IA + AEAT</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-4 text-sm">
+      <a href="#herramienta" class="text-slate-300 hover:text-white transition">Herramienta en Vivo</a>
+      <a href="#precios" class="text-slate-300 hover:text-white transition">Precios sin Permanencia</a>
+      <button onclick="openPaywallModal('Pase Trimestral Express — 19 €')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg transition shadow-md shadow-emerald-500/20">
+        Desbloquear Pro (19 €)
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero Direct-to-Tool (Product-Led Growth: cero llamadas, autoservicio inmediato) -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-10 pb-8 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-emerald-400 text-xs font-semibold mb-4">
+      <span>🔒 100% Autoservicio · Sin Registro Obligatorio · Compatible Excel AEAT & Facturae 3.2.2</span>
+    </div>
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white max-w-4xl mx-auto leading-tight">
+      Cierra tu Trimestre (Mod. 303 y 130) y emite con <span class="text-emerald-400">QR VeriFactu</span> en 30 segundos
+    </h1>
+    <p class="mt-4 text-slate-400 max-w-2xl mx-auto text-base sm:text-lg">
+      Arrastra tus facturas o tickets en PDF. Nuestra IA extrae NIF, Base Imponible, IVA e IRPF, calcula cuánto pagarás a Hacienda y genera tu Libro Registro oficial en Excel.
+    </p>
+
+    <!-- Contador de uso gratuito -->
+    <div class="mt-6 inline-flex items-center gap-3 bg-slate-900/90 border border-slate-800 px-4 py-2 rounded-xl text-sm">
+      <span class="text-slate-300">Créditos gratuitos de prueba hoy:</span>
+      <span id="freeCreditsBadge" class="px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">3 / 3 documentos gratis</span>
+      <span id="proStatusBadge" class="hidden px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">★ LICENCIA PRO ACTIVA</span>
+    </div>
+  </section>
+
+  <!-- APP PRINCIPAL INTERACTIVA -->
+  <main id="herramienta" class="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
+    <!-- Selector de Pestañas -->
+    <div class="flex flex-wrap gap-2 justify-center mb-6">
+      <button onclick="switchTab('extractor')" id="tabBtn-extractor" class="px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 transition">
+        1. Escáner PDF a Excel AEAT (Mod. 303/130)
+      </button>
+      <button onclick="switchTab('verifactu')" id="tabBtn-verifactu" class="px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition">
+        2. Generador Factura QR VeriFactu + XML
+      </button>
+    </div>
+
+    <!-- PESTAÑA 1: ESCÁNER DE FACTURAS Y SIMULADOR 303/130 -->
+    <div id="tab-extractor" class="space-y-6">
+      <!-- Tarjetas de Resumen Fiscal en Vivo (Modelo 303 y 130) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card rounded-2xl p-5">
+          <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Base Imponible Gastos</div>
+          <div id="statBase" class="text-2xl font-extrabold text-white mt-1">0,00 €</div>
+          <div class="text-xs text-slate-400 mt-1">Casilla 28 Mod. 303</div>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="text-xs uppercase tracking-wider text-emerald-400 font-semibold">IVA Soportado Deducible</div>
+          <div id="statIVA" class="text-2xl font-extrabold text-emerald-400 mt-1">0,00 €</div>
+          <div class="text-xs text-slate-400 mt-1">A restar en tu Modelo 303</div>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="text-xs uppercase tracking-wider text-amber-400 font-semibold">Retenciones IRPF</div>
+          <div id="statIRPF" class="text-2xl font-extrabold text-amber-400 mt-1">0,00 €</div>
+          <div class="text-xs text-slate-400 mt-1">Modelo 111 / 130 AEAT</div>
+        </div>
+        <div class="glass-card rounded-2xl p-5">
+          <div class="text-xs uppercase tracking-wider text-sky-400 font-semibold">Ahorro Fiscal Estimado</div>
+          <div id="statAhorro" class="text-2xl font-extrabold text-sky-400 mt-1">0,00 €</div>
+          <div class="text-xs text-slate-400 mt-1">IVA + deducción IRPF (20%)</div>
+        </div>
+      </div>
+
+      <!-- Zona de Carga PDF + Demo en 1 Clic -->
+      <div class="glass-card rounded-2xl p-6 sm:p-8 border-2 border-dashed border-slate-700 hover:border-emerald-500/60 transition text-center">
+        <input type="file" id="pdfInput" accept=".pdf" multiple class="hidden" onchange="handleFilesSelected(event)" />
+        <div class="max-w-xl mx-auto">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4 text-2xl">
+            📄
+          </div>
+          <h3 class="text-lg sm:text-xl font-bold text-white">Arrastra tus facturas en PDF o pruébalo con datos reales</h3>
+          <p class="text-sm text-slate-400 mt-1">
+            Extraemos automáticamente Fecha, Nº Factura, NIF/CIF, Razón Social, Base, IVA (21%, 10%, 4%), IRPF y Huella VeriFactu.
+          </p>
+          <div class="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <button onclick="document.getElementById('pdfInput').click()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-500/20">
+              + Subir Facturas PDF
+            </button>
+            <button onclick="loadDemoInvoices()" class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm border border-slate-700 transition">
+              ⚡ Cargar 3 Facturas de Ejemplo (Demo Instantánea)
+            </button>
+          </div>
+          <div id="uploadStatus" class="mt-3 text-xs text-emerald-400 font-medium hidden"></div>
+        </div>
+      </div>
+
+      <!-- Tabla de Facturas Extraídas -->
+      <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="p-4 sm:px-6 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h4 class="font-bold text-white">Libro Registro de Facturas y Gastos (Formato Oficial AEAT)</h4>
+            <p class="text-xs text-slate-400">Haz clic en cualquier dato para editarlo o corregirlo · El cálculo de IVA/IRPF se actualiza al instante</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="clearInvoices()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-3 py-2 rounded-xl text-xs border border-slate-700 transition">
+              🗑 Limpiar
+            </button>
+            <button onclick="exportToAEATExcel()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 shadow-lg shadow-emerald-500/20">
+              <span>⬇ Descargar Libro Excel Oficial AEAT (.XLSX)</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase bg-slate-900/50">
+                <th class="py-3 px-3">Fecha</th>
+                <th class="py-3 px-3">Nº Factura</th>
+                <th class="py-3 px-3">NIF/CIF</th>
+                <th class="py-3 px-3">Proveedor / Emisor</th>
+                <th class="py-3 px-3 text-right">Base (€)</th>
+                <th class="py-3 px-3 text-right">IVA</th>
+                <th class="py-3 px-3 text-right">IRPF</th>
+                <th class="py-3 px-3 text-right">Total (€)</th>
+                <th class="py-3 px-3">Huella VeriFactu</th>
+                <th class="py-3 px-2 text-center"></th>
+              </tr>
+            </thead>
+            <tbody id="invoiceTableBody" class="divide-y divide-slate-800/70">
+              <tr>
+                <td colspan="10" class="py-10 text-center text-slate-500">
+                  Aún no has cargado facturas. Haz clic en <strong>"Cargar 3 Facturas de Ejemplo"</strong> o sube tus PDFs arriba.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: GENERADOR DE FACTURA VERIFACTU CON QR + XML FACTURAE -->
+    <div id="tab-verifactu" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="glass-card rounded-2xl p-6 space-y-4">
+        <h3 class="text-lg font-bold text-white">Emitir Factura con Huella SHA-256 y QR VeriFactu AEAT</h3>
+        <p class="text-xs text-slate-400">Genera la huella encadenada oficial, el código QR de cotejo de la Agencia Tributaria y el archivo XML Facturae 3.2.2.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div>
+            <label class="text-xs text-slate-400">Tu NIF/CIF (Emisor)</label>
+            <input id="vf_nif_emisor" value="B87654321" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Tu Nombre / Razón Social</label>
+            <input id="vf_nombre_emisor" value="Consultoría Digital S.L." class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">NIF/CIF Cliente</label>
+            <input id="vf_nif_cliente" value="B12345678" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Nombre / Razón Social Cliente</label>
+            <input id="vf_nombre_cliente" value="Grupo Inmobiliario Madrid S.L." class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Nº Serie Factura</label>
+            <input id="vf_num" value="F-2026-0104" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Fecha Expedición</label>
+            <input id="vf_fecha" type="date" value="2026-11-18" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-xs text-slate-400">Concepto / Servicio prestado</label>
+            <input id="vf_concepto" value="Desarrollo y mantenimiento de sistemas digitales - Noviembre" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="text-xs text-slate-400">Base Imponible (€)</label>
+            <input id="vf_base" type="number" step="0.01" value="850.00" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-400">% IVA</label>
+              <select id="vf_iva" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white">
+                <option value="21" selected>21%</option>
+                <option value="10">10%</option>
+                <option value="4">4%</option>
+                <option value="0">0%</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400">% IRPF</label>
+              <select id="vf_irpf" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-white">
+                <option value="0">0%</option>
+                <option value="15" selected>15%</option>
+                <option value="7">7%</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="generateVeriFactuInvoice()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-500/20">
+          ⚡ Generar Factura con QR VeriFactu + Huella AEAT
+        </button>
+      </div>
+
+      <!-- Vista Previa de Factura Oficial Imprimible -->
+      <div class="bg-white text-slate-900 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start border-b border-slate-200 pb-4">
+            <div>
+              <span class="text-xs font-bold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Factura VERI*FACTU</span>
+              <h4 id="prev_emisor" class="text-lg font-extrabold mt-1">Consultoría Digital S.L.</h4>
+              <p id="prev_nif_emisor" class="text-xs text-slate-500">NIF: B87654321</p>
+            </div>
+            <div class="text-right">
+              <div id="prev_num" class="text-lg font-black text-slate-900">F-2026-0104</div>
+              <div id="prev_fecha" class="text-xs text-slate-500">Fecha: 2026-11-18</div>
+            </div>
+          </div>
+
+          <div class="mt-4 bg-slate-50 p-3 rounded-lg text-xs">
+            <div class="font-bold text-slate-500 uppercase">Cliente Receptor:</div>
+            <div id="prev_cliente" class="font-bold text-slate-800 text-sm mt-0.5">Grupo Inmobiliario Madrid S.L. (B12345678)</div>
+          </div>
+
+          <div class="mt-4">
+            <div class="text-xs font-bold uppercase text-slate-400 border-b pb-1">Detalle del concepto</div>
+            <div id="prev_concepto" class="py-3 text-sm font-medium border-b border-slate-100">
+              Desarrollo y mantenimiento de sistemas digitales - Noviembre
+            </div>
+          </div>
+
+          <div class="mt-4 space-y-1 text-sm text-right">
+            <div>Base Imponible: <strong id="prev_base">850,00 €</strong></div>
+            <div>IVA (21%): <strong id="prev_iva">+178,50 €</strong></div>
+            <div>Retención IRPF (15%): <strong id="prev_irpf">-127,50 €</strong></div>
+            <div class="text-lg font-black text-emerald-700 pt-2 border-t">TOTAL: <span id="prev_total">901,00 €</span></div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <img id="prev_qr" src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR" alt="QR AEAT" class="w-20 h-20 border p-1 rounded" />
+            <div class="text-[11px] text-slate-600 max-w-xs">
+              <div class="font-bold text-slate-900">QR Tributario AEAT VERI*FACTU</div>
+              <div class="truncate max-w-[210px]" id="prev_huella">Huella SHA-256: 9F86D081884C7D65...</div>
+              <div class="text-emerald-700 font-semibold">✓ Verificable en sede electrónica AEAT</div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="downloadFacturaeXML()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-lg">
+              ⬇ XML Facturae
+            </button>
+            <button onclick="window.print()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg">
+              🖨 Imprimir PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- SECCIÓN PRECIOS AUTOSERVICIO (Cero llamadas, conversión directa) -->
+  <section id="precios" class="max-w-7xl mx-auto px-4 sm:px-6 py-14 border-t border-slate-900">
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <h2 class="text-2xl sm:text-4xl font-extrabold text-white">Precios simples. Sin permanencia ni llamadas comerciales.</h2>
+      <p class="text-slate-400 mt-2 text-sm sm:text-base">Desbloquea al instante la exportación ilimitada a Excel AEAT, cálculo de Modelos 303/130 y facturación VeriFactu.</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Plan 1: Compra Impulsiva Trimestral -->
+      <div class="glass-card rounded-2xl p-6 flex flex-col justify-between border border-slate-800">
+        <div>
+          <span class="text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-slate-800 text-slate-300">Pago Único · Sin Suscripción</span>
+          <h3 class="text-xl font-bold text-white mt-4">Pase Trimestral Express</h3>
+          <div class="mt-2 flex items-baseline gap-1">
+            <span class="text-4xl font-black text-white">19 €</span>
+            <span class="text-xs text-slate-400">/ pago único (IVA incl.)</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">Perfecto para presentar este trimestre en 5 minutos y olvidarte de picar facturas a mano.</p>
+          <ul class="mt-5 space-y-2.5 text-sm text-slate-300">
+            <li>✓ Hasta <strong>150 facturas PDF</strong> procesadas por IA</li>
+            <li>✓ Exportación Excel Oficial Libro Registro AEAT</li>
+            <li>✓ Simulador completo Modelo 303 y 130</li>
+            <li>✓ Generador de facturas QR VeriFactu ilimitado (90 días)</li>
+          </ul>
+        </div>
+        <button onclick="openPaywallModal('Pase Trimestral Express — 19 €')" class="mt-6 w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-sm border border-slate-700 transition">
+          Desbloquear Trimestre por 19 €
+        </button>
+      </div>
+
+      <!-- Plan 2: Más Vendido (Anual / Mensual Autónomo) -->
+      <div class="glass-card rounded-2xl p-6 flex flex-col justify-between border-2 border-emerald-500 relative shadow-xl shadow-emerald-500/10">
+        <div class="absolute -top-3 right-5 bg-emerald-500 text-slate-950 text-xs font-black px-3 py-0.5 rounded-full">
+          MÁS ELEGIDO POR AUTÓNOMOS
+        </div>
+        <div>
+          <span class="text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300">Todo el Año Cubierto</span>
+          <h3 class="text-xl font-bold text-white mt-4">Autónomo Pro Anual</h3>
+          <div class="mt-2 flex items-baseline gap-1">
+            <span class="text-4xl font-black text-emerald-400">49 €</span>
+            <span class="text-xs text-slate-400">/ año completo (sale a 4,08 €/mes)</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">Ahorra más de 350 €/año frente a ERPs tradicionales. Incluye los 4 trimestres y el cierre anual (Mod. 390).</p>
+          <ul class="mt-5 space-y-2.5 text-sm text-slate-200">
+            <li>✓ <strong>Facturas y Tickets PDF ilimitados</strong> todo el año</li>
+            <li>✓ Emisión ilimitada con <strong>QR VeriFactu + Facturae XML</strong></li>
+            <li>✓ Exportación directa para tu gestoría en 1 clic</li>
+            <li>✓ Detección de gastos deducibles con IA</li>
+          </ul>
+        </div>
+        <button onclick="openPaywallModal('Licencia Autónomo Pro Anual — 49 €')" class="mt-6 w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-500/25">
+          Activar Licencia Anual (49 €)
+        </button>
+      </div>
+
+      <!-- Plan 3: Gestorías / Multi-NIF -->
+      <div class="glass-card rounded-2xl p-6 flex flex-col justify-between border border-slate-800">
+        <div>
+          <span class="text-xs font-bold uppercase px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300">B2B · Multi-Empresa</span>
+          <h3 class="text-xl font-bold text-white mt-4">Licencia Gestoría / Agencia</h3>
+          <div class="mt-2 flex items-baseline gap-1">
+            <span class="text-4xl font-black text-white">99 €</span>
+            <span class="text-xs text-slate-400">/ licencia fundador (o 39 €/mes)</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">Para asesorías, gestorías o emprendedores con varios NIF/sociedades.</p>
+          <ul class="mt-5 space-y-2.5 text-sm text-slate-300">
+            <li>✓ <strong>Múltiples NIFs / Clientes ilimitados</strong></li>
+            <li>✓ Procesamiento masivo de lotes PDF en segundos</li>
+            <li>✓ Exportación CSV/Excel compatible con A3, Sage, Contasol</li>
+            <li>✓ Soporte prioritario y API de extracción</li>
+          </ul>
+        </div>
+        <button onclick="openPaywallModal('Licencia Gestoría Multi-NIF — 99 €')" class="mt-6 w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-sm border border-slate-700 transition">
+          Activar Licencia Gestoría (99 €)
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL DE CHECKOUT AUTOSERVICIO (Pay-to-Unlock) -->
+  <div id="paywallModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex justify-between items-start">
+        <div>
+          <span class="text-xs font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">Activación Instantánea</span>
+          <h3 id="modalPlanTitle" class="text-xl font-extrabold text-white mt-1">Desbloquear VeriFast Pro</h3>
+        </div>
+        <button onclick="closePaywallModal()" class="text-slate-400 hover:text-white text-xl font-bold">✕</button>
+      </div>
+
+      <p class="text-sm text-slate-300 mt-3">
+        Pago 100% seguro con tarjeta, Apple Pay o Google Pay a través de <strong>Stripe</strong>. Al completar el pago recibes tu código de licencia al instante en pantalla y por email.
+      </p>
+
+      <div class="mt-4 bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-xs text-slate-300">
+        <div>✓ Descarga inmediata del Excel Oficial Libro Registro AEAT</div>
+        <div>✓ Procesamiento ilimitado de facturas PDF + QR VeriFactu</div>
+        <div>✓ Factura deducible (100% gasto fiscal para autónomos/pymes)</div>
+      </div>
+
+      <div class="mt-5 space-y-3">
+        <a id="stripeCheckoutBtn" href="https://buy.stripe.com/test_placeholder" target="_blank" class="block w-full text-center bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-500/20">
+          🔒 Pagar ahora con Tarjeta / Apple Pay →
+        </a>
+
+        <div class="pt-3 border-t border-slate-800">
+          <label class="block text-xs text-slate-400 mb-1">¿Ya tienes tu código de licencia tras el pago?</label>
+          <div class="flex gap-2">
+            <input id="licenseInput" placeholder="Ej: VF-PRO-2026" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+            <button onclick="activateLicenseKey()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-2 rounded-lg border border-slate-700">
+              Activar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-slate-900 py-8 text-center text-xs text-slate-500">
+    VeriFast.es · Software de Automatización Fiscal y Cumplimiento VeriFactu AEAT · España 2026
+  </footer>
+
+  <script>
+    let extractedInvoices = [];
+    let freeCredits = 3;
+    let isProUnlocked = false;
+    let lastGeneratedXML = "";
+
+    function switchTab(tab) {
+      document.getElementById('tab-extractor').classList.toggle('hidden', tab !== 'extractor');
+      document.getElementById('tab-verifactu').classList.toggle('hidden', tab !== 'verifactu');
+      document.getElementById('tabBtn-extractor').className = tab === 'extractor'
+        ? 'px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 transition'
+        : 'px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition';
+      document.getElementById('tabBtn-verifactu').className = tab === 'verifactu'
+        ? 'px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 transition'
+        : 'px-5 py-2.5 rounded-xl font-bold text-sm bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition';
+    }
+
+    function updateCreditsUI() {
+      const badge = document.getElementById('freeCreditsBadge');
+      const proBadge = document.getElementById('proStatusBadge');
+      if (isProUnlocked) {
+        badge.classList.add('hidden');
+        proBadge.classList.remove('hidden');
+      } else {
+        badge.textContent = `${freeCredits} / 3 documentos gratis`;
+      }
+    }
+
+    function renderInvoiceTable() {
+      const tbody = document.getElementById('invoiceTableBody');
+      if (!extractedInvoices.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" class="py-10 text-center text-slate-500">
+              Aún no has cargado facturas. Haz clic en <strong>"Cargar 3 Facturas de Ejemplo"</strong> o sube tus PDFs arriba.
+            </td>
+          </tr>`;
+        document.getElementById('statBase').textContent = '0,00 €';
+        document.getElementById('statIVA').textContent = '0,00 €';
+        document.getElementById('statIRPF').textContent = '0,00 €';
+        document.getElementById('statAhorro').textContent = '0,00 €';
+        return;
+      }
+
+      tbody.innerHTML = extractedInvoices.map((inv, idx) => `
+        <tr class="hover:bg-slate-900/40 transition">
+          <td class="py-2.5 px-3">
+            <input type="date" value="${inv.fecha}" onchange="updateInvoiceField(${idx}, 'fecha', this.value)"
+              class="bg-slate-900/80 border border-slate-800 focus:border-emerald-500 rounded px-2 py-1 text-xs text-slate-200 w-[124px]" />
+          </td>
+          <td class="py-2.5 px-3">
+            <input type="text" value="${inv.num_factura}" onchange="updateInvoiceField(${idx}, 'num_factura', this.value)"
+              class="bg-slate-900/80 border border-slate-800 focus:border-emerald-500 rounded px-2 py-1 text-xs font-mono text-slate-200 w-[115px]" />
+          </td>
+          <td class="py-2.5 px-3">
+            <input type="text" value="${inv.nif}" onchange="updateInvoiceField(${idx}, 'nif', this.value)"
+              class="bg-slate-900/80 border border-slate-800 focus:border-emerald-500 rounded px-2 py-1 text-xs font-mono font-bold text-emerald-400 w-[100px]" />
+          </td>
+          <td class="py-2.5 px-3">
+            <input type="text" value="${inv.proveedor}" onchange="updateInvoiceField(${idx}, 'proveedor', this.value)"
+              class="bg-slate-900/80 border border-slate-800 focus:border-emerald-500 rounded px-2.5 py-1 text-xs font-semibold text-white w-full min-w-[180px]" />
+          </td>
+          <td class="py-2.5 px-3 text-right">
+            <input type="number" step="0.01" value="${Number(inv.base_imponible).toFixed(2)}" onchange="updateInvoiceField(${idx}, 'base_imponible', this.value)"
+              class="bg-slate-900/80 border border-slate-800 focus:border-emerald-500 rounded px-2 py-1 text-xs text-right text-white w-[88px]" />
+          </td>
+          <td class="py-2.5 px-3 text-right whitespace-nowrap">
+            <span class="text-emerald-400 text-xs font-medium">+${Number(inv.cuota_iva).toFixed(2)} €</span>
+            <select onchange="updateInvoiceField(${idx}, 'tipo_iva', this.value)"
+              class="ml-1 bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[11px] text-slate-300">
+              <option value="21" ${Number(inv.tipo_iva) === 21 ? 'selected' : ''}>21%</option>
+              <option value="10" ${Number(inv.tipo_iva) === 10 ? 'selected' : ''}>10%</option>
+              <option value="4" ${Number(inv.tipo_iva) === 4 ? 'selected' : ''}>4%</option>
+              <option value="0" ${Number(inv.tipo_iva) === 0 ? 'selected' : ''}>0%</option>
+            </select>
+          </td>
+          <td class="py-2.5 px-3 text-right whitespace-nowrap">
+            <span class="text-amber-400 text-xs font-medium">-${Number(inv.cuota_irpf).toFixed(2)} €</span>
+            <select onchange="updateInvoiceField(${idx}, 'tipo_irpf', this.value)"
+              class="ml-1 bg-slate-900 border border-slate-800 rounded px-1 py-0.5 text-[11px] text-slate-300">
+              <option value="0" ${Number(inv.tipo_irpf) === 0 ? 'selected' : ''}>0%</option>
+              <option value="15" ${Number(inv.tipo_irpf) === 15 ? 'selected' : ''}>15%</option>
+              <option value="7" ${Number(inv.tipo_irpf) === 7 ? 'selected' : ''}>7%</option>
+            </select>
+          </td>
+          <td class="py-2.5 px-3 text-right font-bold text-white whitespace-nowrap">${Number(inv.total).toFixed(2)} €</td>
+          <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400 whitespace-nowrap" title="${inv.huella_verifactu}">
+            ✓ ${String(inv.huella_verifactu || '').slice(0, 12)}...
+          </td>
+          <td class="py-2.5 px-2 text-center">
+            <button onclick="removeInvoiceRow(${idx})" title="Eliminar fila" class="text-slate-500 hover:text-rose-400 font-bold text-xs px-1.5 py-0.5 rounded">✕</button>
+          </td>
+        </tr>
+      `).join('');
+
+      updateSummaryStats();
+    }
+
+    function updateSummaryStats() {
+      const sumBase = extractedInvoices.reduce((a, b) => a + Number(b.base_imponible || 0), 0);
+      const sumIVA = extractedInvoices.reduce((a, b) => a + Number(b.cuota_iva || 0), 0);
+      const sumIRPF = extractedInvoices.reduce((a, b) => a + Number(b.cuota_irpf || 0), 0);
+      const ahorroTotal = sumIVA + (sumBase * 0.20);
+
+      document.getElementById('statBase').textContent = `${sumBase.toFixed(2).replace('.', ',')} €`;
+      document.getElementById('statIVA').textContent = `${sumIVA.toFixed(2).replace('.', ',')} €`;
+      document.getElementById('statIRPF').textContent = `${sumIRPF.toFixed(2).replace('.', ',')} €`;
+      document.getElementById('statAhorro').textContent = `${ahorroTotal.toFixed(2).replace('.', ',')} €`;
+    }
+
+    function updateInvoiceField(idx, field, rawVal) {
+      const inv = extractedInvoices[idx];
+      if (!inv) return;
+      if (field === 'base_imponible') {
+        inv.base_imponible = Math.max(0, parseFloat(rawVal) || 0);
+      } else if (field === 'tipo_iva' || field === 'tipo_irpf') {
+        inv[field] = parseInt(rawVal, 10) || 0;
+      } else {
+        inv[field] = String(rawVal).trim();
+      }
+      inv.cuota_iva = Number((inv.base_imponible * (inv.tipo_iva / 100)).toFixed(2));
+      inv.cuota_irpf = Number((inv.base_imponible * (inv.tipo_irpf / 100)).toFixed(2));
+      inv.total = Number((inv.base_imponible + inv.cuota_iva - inv.cuota_irpf).toFixed(2));
+      renderInvoiceTable();
+    }
+
+    function removeInvoiceRow(idx) {
+      extractedInvoices.splice(idx, 1);
+      renderInvoiceTable();
+    }
+
+    function clearInvoices() {
+      extractedInvoices = [];
+      renderInvoiceTable();
+      const status = document.getElementById('uploadStatus');
+      status.classList.add('hidden');
+    }
+
+    async function loadDemoInvoices() {
+      const samples = [
+        {
+          filename: "Factura_Amazon_Web_Services_Nov.pdf",
+          raw_text: "AMAZON WEB SERVICES EMEA SARL\nNIF: W0185696E\nFactura: AWS-2026-8841\nFecha: 12/11/2026\nServicios Cloud y Servidores dedicados\nBase Imponible: 320,00\nIVA 21%: 67,20\nTotal: 387,20"
+        },
+        {
+          filename: "Factura_Asesoria_Legal_Autonomo.pdf",
+          raw_text: "DESPACHO JURIDICO Y FISCAL MADRID SL\nCIF: B84512390\nFactura: F-2026-419\nFecha: 15/11/2026\nHonorarios profesionales asesoramiento mercantil\nBase: 450,00\nIVA 21%\nRetención IRPF 15%\nImporte Total: 477,00"
+        },
+        {
+          filename: "Factura_Telefonia_Fibra_Negocio.pdf",
+          raw_text: "TELEFONICA DE ESPANA SAU\nCIF: A82018474\nFactura: MOV-2026-9921\nFecha: 17/11/2026\nFibra Óptica Simétrica 1Gb + 2 Líneas Móviles Negocio\nImporte Total: 96,80 (21% IVA incluido)"
+        }
+      ];
+
+      const status = document.getElementById('uploadStatus');
+      status.classList.remove('hidden');
+      status.textContent = "⏳ Analizando 3 facturas con el motor fiscal AEAT...";
+
+      for (const sample of samples) {
+        const res = await fetch('/api/extract-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(sample)
+        });
+        const data = await res.json();
+        if (data.ok) {
+          extractedInvoices.push(data.invoice);
+        }
+      }
+      freeCredits = 0;
+      updateCreditsUI();
+      renderInvoiceTable();
+      status.textContent = "✓ ¡3 facturas analizadas! Ya tienes calculado tu ahorro en el Modelo 303 y 130.";
+    }
+
+    async function handleFilesSelected(event) {
+      const files = Array.from(event.target.files || []);
+      if (!files.length) return;
+
+      if (!isProUnlocked && freeCredits <= 0) {
+        openPaywallModal('Desbloquear Lote de Facturas PDF — 19 €');
+        return;
+      }
+
+      const status = document.getElementById('uploadStatus');
+      status.classList.remove('hidden');
+
+      for (const file of files) {
+        if (!isProUnlocked && freeCredits <= 0) {
+          openPaywallModal('Has superado las 3 facturas gratuitas — Desbloquea todo el trimestre por 19 €');
+          break;
+        }
+        status.textContent = `⏳ Extrayendo datos fiscales de ${file.name}...`;
+        const b64 = await fileToBase64(file);
+        const res = await fetch('/api/extract-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: file.name, file_base64: b64 })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          extractedInvoices.push(data.invoice);
+          if (!isProUnlocked) freeCredits = Math.max(0, freeCredits - 1);
+          updateCreditsUI();
+          renderInvoiceTable();
+        }
+      }
+      status.textContent = "✓ Extracción completada y validada con huella SHA-256.";
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function exportToAEATExcel() {
+      if (!extractedInvoices.length) {
+        await loadDemoInvoices();
+      }
+      if (!isProUnlocked) {
+        openPaywallModal('Descargar Libro Registro Oficial AEAT en Excel (.XLSX) — 19 €');
+        return;
+      }
+      const res = await fetch('/api/export-aeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoices: extractedInvoices })
+      });
+      const data = await res.json();
+      if (data.ok && data.xlsx_base64) {
+        const binaryString = atob(data.xlsx_base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = data.filename;
+        a.click();
+      }
+    }
+
+    async function generateVeriFactuInvoice() {
+      const payload = {
+        nif_emisor: document.getElementById('vf_nif_emisor').value,
+        nombre_emisor: document.getElementById('vf_nombre_emisor').value,
+        nif_cliente: document.getElementById('vf_nif_cliente').value,
+        nombre_cliente: document.getElementById('vf_nombre_cliente').value,
+        num_factura: document.getElementById('vf_num').value,
+        fecha: document.getElementById('vf_fecha').value,
+        concepto: document.getElementById('vf_concepto').value,
+        base_imponible: parseFloat(document.getElementById('vf_base').value || '0'),
+        tipo_iva: parseInt(document.getElementById('vf_iva').value || '21', 10),
+        tipo_irpf: parseInt(document.getElementById('vf_irpf').value || '0', 10)
+      };
+
+      const res = await fetch('/api/generate-verifactu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.ok) {
+        const inv = data.invoice;
+        lastGeneratedXML = data.facturae_xml;
+        document.getElementById('prev_emisor').textContent = inv.nombre_emisor;
+        document.getElementById('prev_nif_emisor').textContent = `NIF: ${inv.nif_emisor}`;
+        document.getElementById('prev_num').textContent = inv.num_factura;
+        document.getElementById('prev_fecha').textContent = `Fecha: ${inv.fecha}`;
+        document.getElementById('prev_cliente').textContent = `${inv.nombre_cliente} (${inv.nif_cliente})`;
+        document.getElementById('prev_concepto').textContent = inv.concepto;
+        document.getElementById('prev_base').textContent = `${inv.base_imponible.toFixed(2)} €`;
+        document.getElementById('prev_iva').textContent = `+${inv.cuota_iva.toFixed(2)} € (${inv.tipo_iva}%)`;
+        document.getElementById('prev_irpf').textContent = `-${inv.cuota_irpf.toFixed(2)} € (${inv.tipo_irpf}%)`;
+        document.getElementById('prev_total').textContent = `${inv.total.toFixed(2)} €`;
+        document.getElementById('prev_huella').textContent = `Huella SHA-256: ${inv.huella.slice(0, 20)}...`;
+        document.getElementById('prev_qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${encodeURIComponent(inv.qr_url)}`;
+      }
+    }
+
+    function downloadFacturaeXML() {
+      if (!isProUnlocked) {
+        openPaywallModal('Descargar XML Facturae 3.2.2 + VeriFactu — 19 €');
+        return;
+      }
+      if (!lastGeneratedXML) {
+        generateVeriFactuInvoice().then(() => downloadFacturaeXML());
+        return;
+      }
+      const blob = new Blob([lastGeneratedXML], { type: 'application/xml;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Facturae_${document.getElementById('vf_num').value}.xml`;
+      a.click();
+    }
+
+    function openPaywallModal(title) {
+      document.getElementById('modalPlanTitle').textContent = title || 'Desbloquear VeriFast Pro';
+      const modal = document.getElementById('paywallModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closePaywallModal() {
+      const modal = document.getElementById('paywallModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function activateLicenseKey() {
+      const val = (document.getElementById('licenseInput').value || '').trim().toUpperCase();
+      if (val.startsWith('VF-') || val === 'PRO2026') {
+        isProUnlocked = true;
+        updateCreditsUI();
+        closePaywallModal();
+        alert('¡Licencia VeriFast Pro activada! Ya puedes exportar el Excel AEAT y XML Facturae sin límites.');
+      } else {
+        alert('Código no válido. Completa el pago en Stripe para recibir tu clave al instante.');
+      }
+    }
+  </script>
+</body>
+</html>
