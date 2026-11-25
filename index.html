@@ -393,7 +393,7 @@
         <div class="pt-3 border-t border-slate-800">
           <label class="block text-xs text-slate-400 mb-1">¿Ya tienes tu código de licencia tras el pago?</label>
           <div class="flex gap-2">
-            <input id="licenseInput" placeholder="Ej: VF-PRO-2026" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+            <input id="licenseInput" placeholder="Introduce tu clave (XXXX-XXXX-XXXX)" class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
             <button onclick="activateLicenseKey()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-3 py-2 rounded-lg border border-slate-700">
               Activar
             </button>
@@ -427,11 +427,18 @@
       return '★ LICENCIA AUTÓNOMO PRO ACTIVA';
     }
 
-    // Auto-desbloqueo automático al volver de Stripe (?unlocked=VF-...)
+    const VALID_TOKEN_HASHES = new Set([
+      "VF-PRO-2026",
+      "VF-TRIM-2026",
+      "VF-GESTORIA-2026",
+      "VF-8842-9910-AEAT"
+    ]);
+
+    // Auto-desbloqueo automático al volver de Stripe (?unlocked=...)
     (function checkAutoUnlockFromStripe() {
       const params = new URLSearchParams(window.location.search);
-      const token = (params.get('unlocked') || '').toUpperCase();
-      if (token.startsWith('VF-') || token === 'PRO2026') {
+      const token = (params.get('unlocked') || '').trim().toUpperCase();
+      if (VALID_TOKEN_HASHES.has(token)) {
         isProUnlocked = true;
         activePlanLabel = getPlanLabelFromToken(token);
         localStorage.setItem('verifast_pro_unlocked', 'true');
@@ -767,9 +774,11 @@
 
     function activateLicenseKey() {
       const val = (document.getElementById('licenseInput').value || '').trim().toUpperCase();
-      if (val.startsWith('VF-') || val === 'PRO2026') {
+      if (VALID_TOKEN_HASHES.has(val)) {
         isProUnlocked = true;
+        activePlanLabel = getPlanLabelFromToken(val);
         localStorage.setItem('verifast_pro_unlocked', 'true');
+        localStorage.setItem('verifast_plan_label', activePlanLabel);
         updateCreditsUI();
         closePaywallModal();
         alert('¡Licencia VeriFast Pro activada! Ya puedes exportar el Excel AEAT y XML Facturae sin límites.');
