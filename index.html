@@ -410,8 +410,27 @@
   <script>
     let extractedInvoices = [];
     let freeCredits = 3;
-    let isProUnlocked = false;
+    let isProUnlocked = localStorage.getItem('verifast_pro_unlocked') === 'true';
     let lastGeneratedXML = "";
+
+    // URLs de Stripe Payment Links por plan (se actualizan con tus enlaces reales de Stripe)
+    const STRIPE_LINKS = {
+      trimestral: "https://buy.stripe.com/test_placeholder",
+      anual: "https://buy.stripe.com/test_placeholder",
+      gestoria: "https://buy.stripe.com/test_placeholder"
+    };
+
+    // Auto-desbloqueo automático al volver de Stripe (?unlocked=VF-PRO-2026)
+    (function checkAutoUnlockFromStripe() {
+      const params = new URLSearchParams(window.location.search);
+      const token = (params.get('unlocked') || '').toUpperCase();
+      if (token.startsWith('VF-') || token === 'PRO2026') {
+        isProUnlocked = true;
+        localStorage.setItem('verifast_pro_unlocked', 'true');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      window.addEventListener('DOMContentLoaded', () => updateCreditsUI());
+    })();
 
     function switchTab(tab) {
       document.getElementById('tab-extractor').classList.toggle('hidden', tab !== 'extractor');
@@ -712,8 +731,19 @@
       a.click();
     }
 
-    function openPaywallModal(title) {
+    function openPaywallModal(title, planKey) {
       document.getElementById('modalPlanTitle').textContent = title || 'Desbloquear VeriFast Pro';
+      const btn = document.getElementById('stripeCheckoutBtn');
+      const t = String(title || '').toLowerCase();
+      if (planKey && STRIPE_LINKS[planKey]) {
+        btn.href = STRIPE_LINKS[planKey];
+      } else if (t.includes('49')) {
+        btn.href = STRIPE_LINKS.anual;
+      } else if (t.includes('99')) {
+        btn.href = STRIPE_LINKS.gestoria;
+      } else {
+        btn.href = STRIPE_LINKS.trimestral;
+      }
       const modal = document.getElementById('paywallModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -729,11 +759,12 @@
       const val = (document.getElementById('licenseInput').value || '').trim().toUpperCase();
       if (val.startsWith('VF-') || val === 'PRO2026') {
         isProUnlocked = true;
+        localStorage.setItem('verifast_pro_unlocked', 'true');
         updateCreditsUI();
         closePaywallModal();
         alert('¡Licencia VeriFast Pro activada! Ya puedes exportar el Excel AEAT y XML Facturae sin límites.');
       } else {
-        alert('Código no válido. Completa el pago en Stripe para recibir tu clave al instante.');
+        alert('Código no válido. Completa el pago en Stripe para activar tu licencia automáticamente.');
       }
     }
   </script>
