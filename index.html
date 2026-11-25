@@ -386,7 +386,7 @@
       </div>
 
       <div class="mt-5 space-y-3">
-        <a id="stripeCheckoutBtn" href="https://buy.stripe.com/test_placeholder" target="_blank" class="block w-full text-center bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-500/20">
+        <a id="stripeCheckoutBtn" href="https://buy.stripe.com/dRm6oJcrhc8N5bm1Xr3ZK00" target="_blank" class="block w-full text-center bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-500/20">
           🔒 Pagar ahora con Tarjeta / Apple Pay →
         </a>
 
@@ -411,22 +411,31 @@
     let extractedInvoices = [];
     let freeCredits = 3;
     let isProUnlocked = localStorage.getItem('verifast_pro_unlocked') === 'true';
+    let activePlanLabel = localStorage.getItem('verifast_plan_label') || '★ LICENCIA PRO ACTIVA';
     let lastGeneratedXML = "";
 
-    // URLs de Stripe Payment Links por plan (se actualizan con tus enlaces reales de Stripe)
+    // URLs de Stripe Payment Links por plan (conectados en producción)
     const STRIPE_LINKS = {
-      trimestral: "https://buy.stripe.com/test_placeholder",
-      anual: "https://buy.stripe.com/test_placeholder",
-      gestoria: "https://buy.stripe.com/test_placeholder"
+      trimestral: "https://buy.stripe.com/dRm6oJcrhc8N5bm1Xr3ZK00",
+      anual: "https://buy.stripe.com/dRmdRb1MD4Gl0V631v3ZK01",
+      gestoria: "https://buy.stripe.com/3cI6oJbnda0F33eatX3ZK02"
     };
 
-    // Auto-desbloqueo automático al volver de Stripe (?unlocked=VF-PRO-2026)
+    function getPlanLabelFromToken(token) {
+      if (token.includes('GESTORIA')) return '★ LICENCIA GESTORÍA MULTI-NIF ACTIVA';
+      if (token.includes('TRIM')) return '★ PASE TRIMESTRAL EXPRESS ACTIVO';
+      return '★ LICENCIA AUTÓNOMO PRO ACTIVA';
+    }
+
+    // Auto-desbloqueo automático al volver de Stripe (?unlocked=VF-...)
     (function checkAutoUnlockFromStripe() {
       const params = new URLSearchParams(window.location.search);
       const token = (params.get('unlocked') || '').toUpperCase();
       if (token.startsWith('VF-') || token === 'PRO2026') {
         isProUnlocked = true;
+        activePlanLabel = getPlanLabelFromToken(token);
         localStorage.setItem('verifast_pro_unlocked', 'true');
+        localStorage.setItem('verifast_plan_label', activePlanLabel);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
       window.addEventListener('DOMContentLoaded', () => updateCreditsUI());
@@ -448,6 +457,7 @@
       const proBadge = document.getElementById('proStatusBadge');
       if (isProUnlocked) {
         badge.classList.add('hidden');
+        proBadge.textContent = activePlanLabel;
         proBadge.classList.remove('hidden');
       } else {
         badge.textContent = `${freeCredits} / 3 documentos gratis`;
