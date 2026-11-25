@@ -23,6 +23,16 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 PORT = int(os.getenv("PORT", "8765"))
 HOST = os.getenv("HOST", "0.0.0.0" if os.getenv("PORT") else "127.0.0.1")
+PUBLIC_URL = os.getenv("RENDER_EXTERNAL_URL", "https://verifast-es.onrender.com")
+
+# Telemetría de embudo en tiempo real (en memoria + persistencia ligera)
+FUNNEL_STATS = {
+    "started_at": datetime.datetime.now().isoformat(),
+    "page_views": 0,
+    "pdfs_extracted": 0,
+    "verifactu_generated": 0,
+    "excel_exports": 0,
+}
 
 # Directorio de CIFs oficiales de grandes emisores en España (respaldo cuando el CIF va en imagen/logo en el PDF)
 KNOWN_CORPORATE_CIFS = {
@@ -554,6 +564,7 @@ class VeriFastHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/" or self.path.startswith("/?"):
+            FUNNEL_STATS["page_views"] += 1
             index_path = os.path.join(os.path.dirname(__file__), "index.html")
             with open(index_path, "rb") as f:
                 content = f.read()
@@ -571,6 +582,11 @@ class VeriFastHandler(BaseHTTPRequestHandler):
                 "service": "VeriFast AEAT Fiscal Engine v3",
                 "ai_enabled": True,
             })
+        elif self.path == "/api/stats":
+            self._send_json({
+                "ok": True,
+                "funnel": FUNNEL_STATS,
+            })
         else:
             self.send_error(404, "Not Found")
 
@@ -583,6 +599,7 @@ class VeriFastHandler(BaseHTTPRequestHandler):
             payload = {}
 
         if self.path == "/api/extract-pdf":
+            FUNNEL_STATS["pdfs_extracted"] += 1
             filename = payload.get("filename", "factura.pdf")
             b64_content = payload.get("file_base64", "")
             raw_text = payload.get("raw_text", "")
@@ -608,6 +625,7 @@ class VeriFastHandler(BaseHTTPRequestHandler):
             self._send_json({"ok": True, "invoice": invoice_data})
 
         elif self.path == "/api/generate-verifactu":
+            FUNNEL_STATS["verifactu_generated"] += 1
             nif_emisor = payload.get("nif_emisor", "B12345678")
             nombre_emisor = payload.get("nombre_emisor", "Autónomo / Pyme S.L.")
             nif_cliente = payload.get("nif_cliente", "B98765432")
@@ -652,6 +670,7 @@ class VeriFastHandler(BaseHTTPRequestHandler):
             })
 
         elif self.path == "/api/export-aeat":
+            FUNNEL_STATS["excel_exports"] += 1
             invoices = payload.get("invoices", [])
             for inv in invoices:
                 inv["huella_verifactu"] = compute_verifactu_hash(
@@ -674,7 +693,26 @@ class VeriFastHandler(BaseHTTPRequestHandler):
             self.send_error(404, "Endpoint no encontrado")
 
 
+def _keep_alive_worker():
+    """Evita que la capa gratuita de Render se duerma tras 15 min de inactividad."""
+    import threading
+    import time
+    import urllib.request
+
+    def _loop():
+        while True:
+            time.sleep(600)
+            try:
+                urllib.request.urlopen(f"{PUBLIC_URL}/api/health", timeout=10).read()
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_loop, daemon=True)
+    t.start()
+
+
 if __name__ == "__main__":
+    _keep_alive_worker()
     server = HTTPServer((HOST, PORT), VeriFastHandler)
     print(f"[*] VeriFast AEAT SaaS v3 corriendo en http://localhost:{PORT}", flush=True)
     server.serve_forever()
