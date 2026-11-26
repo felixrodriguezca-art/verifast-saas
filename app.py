@@ -16,9 +16,8 @@ try:
 except ImportError:
     from xlsx_builder import build_aeat_xlsx
 
-# Cargar variables de entorno (.env del directorio padre o local)
-load_dotenv()
-load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
+# Cargar exclusivamente variables de entorno locales de verifast_saas
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 PORT = int(os.getenv("PORT", "8765"))
