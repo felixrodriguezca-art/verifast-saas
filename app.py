@@ -575,6 +575,29 @@ class VeriFastHandler(BaseHTTPRequestHandler):
         elif self.path == "/favicon.ico":
             self.send_response(204)
             self.end_headers()
+        elif self.path == "/robots.txt":
+            robots = "User-agent: *\nAllow: /\nSitemap: https://verifast.es/sitemap.xml\n".encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Length", str(len(robots)))
+            self.end_headers()
+            self.wfile.write(robots)
+        elif self.path == "/sitemap.xml":
+            today_iso = datetime.date.today().isoformat()
+            sitemap = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://verifast.es/</loc>
+    <lastmod>{today_iso}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>""".encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/xml; charset=utf-8")
+            self.send_header("Content-Length", str(len(sitemap)))
+            self.end_headers()
+            self.wfile.write(sitemap)
         elif self.path == "/api/health":
             self._send_json({
                 "status": "ok",
